@@ -4,8 +4,7 @@ import type { LoginPayload, LoginResponse, User } from '../types';
  * Sends login credentials to the backend for verification and session creation.
  */
 export const loginWithSui = async (payload: LoginPayload): Promise<LoginResponse> => {
-    // Replace with your actual backend URL.
-    // In a real app, this should be an environment variable.
+    // Using environment variable for backend URL with fallback to localhost
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
     const loginEndpoint = `${backendUrl}/auth/login`;
 
