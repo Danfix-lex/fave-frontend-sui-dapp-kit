@@ -1,56 +1,35 @@
-
 import type { LoginPayload, LoginResponse, User } from '../types';
 
 /**
  * Sends login credentials to the backend for verification and session creation.
- * 
- * NOTE: This is a MOCKED implementation for demonstration purposes.
- * In a real application, you would replace this with a `fetch` call to your backend API.
- * 
- * Example `fetch` implementation:
- * 
- * const response = await fetch('/auth/login', { // Or your full backend URL
- *   method: 'POST',
- *   headers: {
- *     'Content-Type': 'application/json',
- *   },
- *   body: JSON.stringify(payload),
- * });
- * 
- * if (!response.ok) {
- *   const errorData = await response.json();
- *   throw new Error(errorData.message || 'Authentication failed');
- * }
- * 
- * const data: LoginResponse = await response.json();
- * return data;
- * 
  */
-export const loginWithSui = (payload: LoginPayload): Promise<LoginResponse> => {
-  return new Promise((resolve, reject) => {
+export const loginWithSui = async (payload: LoginPayload): Promise<LoginResponse> => {
+    // Replace with your actual backend URL.
+    // In a real app, this should be an environment variable.
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+    const loginEndpoint = `${backendUrl}/auth/login`;
+
     console.log('Sending login payload to backend:', payload);
 
-    // Simulate network delay
-    setTimeout(() => {
-      // Simulate a successful login
-      if (payload.idToken && payload.suiAddress) {
-        const mockUser: User = {
-          suiAddress: payload.suiAddress,
-          role: payload.role,
-        };
-        
-        const mockResponse: LoginResponse = {
-          sessionToken: `mock-session-token-${Date.now()}`,
-          user: mockUser,
-        };
-        
-        console.log('Received mock success response from backend:', mockResponse);
-        resolve(mockResponse);
-      } else {
-        // Simulate an error
-        console.error('Mock backend error: Invalid payload.');
-        reject(new Error('Authentication failed. Invalid idToken or suiAddress.'));
-      }
-    }, 1500); // 1.5 second delay
-  });
+    try {
+        const response = await fetch(loginEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Authentication failed');
+        }
+
+        const data: LoginResponse = await response.json();
+        console.log('Received success response from backend:', data);
+        return data;
+    } catch (err: any) {
+        console.error('Backend login error:', err);
+        throw new Error(err.message || 'An unknown network error occurred.');
+    }
 };
