@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { getFullnodeUrl } from '@mysten/sui/client';
@@ -6,13 +5,16 @@ import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 // Fix: Use namespace import for @tanstack/react-query to resolve potential module resolution issues.
 import * as tanstackQuery from '@tanstack/react-query';
 import '@mysten/dapp-kit/dist/index.css';
+// Import our custom CSS
+import './dist/output.css';
 
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 
 const queryClient = new tanstackQuery.QueryClient();
+// Simplified network configuration to focus on devnet
 const networks = {
-	devnet: { url: getFullnodeUrl('devnet') },
+  devnet: { url: getFullnodeUrl('devnet') },
 };
 
 const rootElement = document.getElementById('root');
@@ -26,8 +28,8 @@ root.render(
   <React.StrictMode>
     <tanstackQuery.QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networks} defaultNetwork="devnet">
-        {/* fix: Removed zkLoginProviders prop as it is deprecated in newer versions of @mysten/dapp-kit. */}
-        <WalletProvider>
+        {/* Added autoConnect prop which might help with connection issues */}
+        <WalletProvider autoConnect={true}>
           <AuthProvider>
             <App />
           </AuthProvider>
