@@ -7,7 +7,7 @@ import Spinner from '../components/ui/Spinner';
 import Alert from '../components/ui/Alert';
 
 const LoginPage: React.FC = () => {
-  const [selectedRole, setSelectedRole] = useState<Role>(Role.Fan);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const { login, isLoading, error: authError } = useAuth();
   const { connectionStatus, currentWallet, isConnected, isConnecting, isDisconnected } = useCurrentWallet();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
@@ -20,7 +20,7 @@ const LoginPage: React.FC = () => {
     const account = currentWallet?.accounts[0];
     
     // Check if account has zkLogin property with proper typing
-    if (connectionStatus === 'connected' && account && 'zkLogin' in account && account.zkLogin) {
+    if (connectionStatus === 'connected' && account && 'zkLogin' in account && account.zkLogin && selectedRole) {
       // Type assertion for zkLogin object
       const zkLoginData = account.zkLogin as { jwt: string };
       
@@ -35,16 +35,16 @@ const LoginPage: React.FC = () => {
         role: selectedRole,
       };
       await login(payload);
-    } else if (connectionStatus === 'disconnected') {
+    } else if (connectionStatus === 'disconnected' && selectedRole) {
       setConnectionError('Wallet is not connected. Please connect your wallet.');
     }
   }, [connectionStatus, currentWallet, selectedRole, login]);
 
   useEffect(() => {
-    if (connectionStatus === 'connected' && !isLoading) {
+    if (connectionStatus === 'connected' && !isLoading && selectedRole) {
       handleLoginAttempt();
     }
-  }, [connectionStatus, isLoading, handleLoginAttempt]);
+  }, [connectionStatus, isLoading, handleLoginAttempt, selectedRole]);
 
   const RoleSelector = () => (
     <div className="w-full max-w-md">
@@ -123,9 +123,14 @@ const LoginPage: React.FC = () => {
                 </div>
               ) : (
                 <ConnectButton
+                  disabled={!selectedRole} // Disable the button until a role is selected
                   onOpenChange={setIsConnectModalOpen}
-                  connectText="Continue with Google"
-                  className="w-full !bg-gradient-to-r !from-sui-blue !to-blue-600 hover:!from-blue-600 hover:!to-sui-blue !text-white !font-bold !py-4 !px-6 !rounded-xl !transition-all !transform hover:!scale-[1.02] !shadow-lg !shadow-sui-blue/30"
+                  connectText={!selectedRole ? "Select a Role First" : "Continue with Google"}
+                  className={`w-full !font-bold !py-4 !px-6 !rounded-xl !transition-all !transform ${
+                    selectedRole 
+                      ? "!bg-gradient-to-r !from-sui-blue !to-blue-600 hover:!from-blue-600 hover:!to-sui-blue !text-white hover:!scale-[1.02] !shadow-lg !shadow-sui-blue/30" 
+                      : "!bg-gray-700 !text-gray-400 !cursor-not-allowed"
+                  }`}
                 />
               )}
             </div>
@@ -134,6 +139,15 @@ const LoginPage: React.FC = () => {
               <div className="mt-6">
                 <Alert 
                   message={authError || connectionError || "Wallet is disconnected. Please connect your wallet to continue."} 
+                />
+              </div>
+            )}
+            
+            {!selectedRole && (
+              <div className="mt-6">
+                <Alert 
+                  message="Please select a role before connecting your wallet." 
+                  type="info"
                 />
               </div>
             )}
