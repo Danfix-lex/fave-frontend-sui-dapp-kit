@@ -1,0 +1,5 @@
+{
+  "name": "fave-frontend-sui-dapp-kit",
+  "description": "A professional application demonstrating Sui Dapp Kit Google login and backend authentication flow. Users log in via their Google account, select a role, and the application authenticates with a backend service to establish a session.",
+  "requestFramePermissions": []
+}
