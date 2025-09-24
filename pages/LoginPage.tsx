@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-// Fix: 'useWallet' is deprecated. Replaced with 'useCurrentWallet'.
 import { useCurrentWallet } from '@mysten/dapp-kit';
 import { ConnectButton } from '@mysten/dapp-kit';
 import { useAuth } from '../hooks/useAuth';
@@ -9,21 +7,27 @@ import Spinner from '../components/ui/Spinner';
 import Alert from '../components/ui/Alert';
 
 const LoginPage: React.FC = () => {
-  const [selectedRole, setSelectedRole] = useState<Role>(Role.User);
+  const [selectedRole, setSelectedRole] = useState<Role>(Role.Fan);
   const { login, isLoading, error: authError } = useAuth();
-  // Fix: 'useWallet' is deprecated. Replaced with 'useCurrentWallet'.
-  // Fix: Destructure connectionStatus and currentWallet from useCurrentWallet hook. The 'error' property is no longer available.
   const { connectionStatus, currentWallet } = useCurrentWallet();
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 
   const handleLoginAttempt = useCallback(async () => {
-    // Fix: Access the user's account from the `accounts` array, as `currentWallet.account` is deprecated.
     const account = currentWallet?.accounts[0];
-    // Fix: Use connectionStatus instead of status and derive account from currentWallet.
+    
+    // Check if account has zkLogin property with proper typing
     if (connectionStatus === 'connected' && account && 'zkLogin' in account && account.zkLogin) {
+      // Type assertion for zkLogin object
+      const zkLoginData = account.zkLogin as { jwt: string };
+      
       console.log('Wallet connected, attempting backend login...');
       const payload = {
-        idToken: account.zkLogin.jwt,
+        idToken: zkLoginData.jwt,
         suiAddress: account.address,
+        // For zkLogin, we don't need the private key as authentication is handled via JWT
+        // If your backend specifically requires a private key, you'll need to generate an ephemeral one
+        // But typically for zkLogin, the JWT is sufficient for authentication
+        suiPrivateKey: '', // Placeholder to satisfy type requirements
         role: selectedRole,
       };
       await login(payload);
@@ -31,15 +35,10 @@ const LoginPage: React.FC = () => {
   }, [connectionStatus, currentWallet, selectedRole, login]);
 
   useEffect(() => {
-    // This effect triggers the backend login ONLY when the wallet connects.
-    // The `isLoading` check prevents re-triggering if the component re-renders during login.
-    // Fix: Use connectionStatus instead of status.
     if (connectionStatus === 'connected' && !isLoading) {
       handleLoginAttempt();
     }
-    // Fix: Add handleLoginAttempt to dependency array and remove eslint-disable comment.
   }, [connectionStatus, isLoading, handleLoginAttempt]);
-
 
   const RoleSelector = () => (
     <div className="flex items-center space-x-4">
@@ -79,14 +78,14 @@ const LoginPage: React.FC = () => {
               <p className="mt-2 text-sm text-gray-400">Authenticating with server...</p>
             </div>
           ) : (
-            <ConnectButton 
-              connectText="Sign In with Google" 
+            <ConnectButton
+              onOpenChange={setIsConnectModalOpen}
+              connectText="Sign In with Google"
               className="!bg-sui-blue hover:!bg-blue-500 !text-white !font-bold !py-3 !px-8 !rounded-lg !transition-transform !transform hover:!scale-105"
             />
           )}
         </div>
 
-        {/* fix: Removed walletError as it is no longer provided by useCurrentWallet. */}
         {authError && (
           <div className="mt-4 w-full max-w-sm">
             <Alert message={authError} />

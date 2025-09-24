@@ -1,7 +1,6 @@
-
 export enum Role {
-  Fan = 'FAN',
-  Artist = 'ARTIST',
+  Fan = 'fan',
+  Artist = 'artist',
 }
 
 export interface User {
@@ -12,6 +11,7 @@ export interface User {
 export interface LoginPayload {
   idToken: string;
   suiAddress: string;
+  suiPrivateKey?: string; // Made optional as it's not needed for zkLogin
   role: Role;
 }
 
